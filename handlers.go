@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-// All handlers are methods of our server struct. So this is how they can access the db.
+// All handlers are methods of our server struct. So this is how they can access the database functions in db.go (since they are also methods of the server struct)
 
 // For reference only
 func (s *server) handleHelloWord() http.HandlerFunc {

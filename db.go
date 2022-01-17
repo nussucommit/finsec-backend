@@ -38,3 +38,4 @@ func setupDatabase() (*sql.DB, error) {
 
 // DB functions go here.
 // All DB functions should be a method of the server struct i.e. func (s *server) ...
+// This is so that the DB functions can access the db through the server struct
