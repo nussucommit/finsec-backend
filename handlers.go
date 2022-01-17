@@ -4,6 +4,8 @@ import (
 	"net/http"
 )
 
+// All handlers are methods of our server struct. So this is how they can access the db.
+
 // For reference only
 func (s *server) handleHelloWord() http.HandlerFunc {
 	// Define the structure of your request body (for POST requests) and response
