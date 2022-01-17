@@ -21,7 +21,7 @@ func setupDatabase() (*sql.DB, error) {
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
 		os.Getenv("POSTGRES_DB"))
-	
+
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return nil, err
