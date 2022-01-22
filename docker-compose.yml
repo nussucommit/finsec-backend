@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  main:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - postgresql
+    networks:
+      - fullstack
+    env_file:
+      - .env
+
+  postgresql:
+    image: "postgres:13"
+    ports:
+      - "5432:5432"
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - fullstack
+
+networks:
+  fullstack:
+    driver: bridge
