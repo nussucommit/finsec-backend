@@ -11,8 +11,8 @@ type user struct {
 	Role       int    `json:"role"`
 }
 
-type role struct {
-	Role_id     int    `json:"role_id"`
-	Role_name   string `json:"role_name"`
-	Description string `json:"description"`
-}
+// type role struct {
+// 	Role_id     int    `json:"role_id"`
+// 	Role_name   string `json:"role_name"`
+// 	Description string `json:"description"`
+// }

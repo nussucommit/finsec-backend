@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -40,22 +39,18 @@ func (s *server) handleHelloWord() http.HandlerFunc {
 	}
 }
 
-func (s *server) hanldeUserRegister() func(w http.ResponseWriter, r *http.Request) {
+func (s *server) hanldeUserSignUp() func(w http.ResponseWriter, r *http.Request) {
 
 	type response struct {
 		Message string `json:"message"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := ioutil.ReadAll(r.Body)
-
-		if err != nil {
-			respondErr(w, r, err, http.StatusInternalServerError)
-		}
+		decoder := json.NewDecoder(r.Body)
 
 		// var data map[string]interface{}
 		var newUser user
-		err = json.Unmarshal(req, &newUser)
+		err := decoder.Decode(&newUser)
 
 		if err != nil {
 			respondErr(w, r, err, http.StatusInternalServerError)
