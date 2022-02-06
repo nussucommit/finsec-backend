@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // All handlers are methods of our server struct. So this is how they can access the database functions in db.go (since they are also methods of the server struct)
@@ -33,5 +37,43 @@ func (s *server) handleHelloWord() http.HandlerFunc {
 		res := response{"Hello World!"}
 
 		respond(w, r, res, http.StatusOK)
+	}
+}
+
+func (s *server) hanldeUserRegister() func(w http.ResponseWriter, r *http.Request) {
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := ioutil.ReadAll(r.Body)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+		}
+
+		// var data map[string]interface{}
+		var newUser user
+		err = json.Unmarshal(req, &newUser)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+		}
+
+		passEncrypted, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
+
+		_, err = s.db.Exec("INSERT INTO Users (name, password, email) VALUES ($1, $2, $3)",
+			newUser.Name,
+			passEncrypted,
+			newUser.Email,
+		)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+		}
+
+		resp := response{"User registered"}
+		respond(w, r, resp, http.StatusOK)
 	}
 }
