@@ -108,7 +108,7 @@ func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request)
 		}
 
 		if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(newUser.Password)); err != nil {
-			respondErr(w, r, err, http.StatusInternalServerError)
+			respond(w, r, response{"Incorrect password"}, http.StatusOK)
 			return
 		}
 
