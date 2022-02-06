@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -54,6 +57,7 @@ func (s *server) hanldeUserSignUp() func(w http.ResponseWriter, r *http.Request)
 
 		if err != nil {
 			respondErr(w, r, err, http.StatusInternalServerError)
+			return
 		}
 
 		passEncrypted, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
@@ -66,9 +70,70 @@ func (s *server) hanldeUserSignUp() func(w http.ResponseWriter, r *http.Request)
 
 		if err != nil {
 			respondErr(w, r, err, http.StatusInternalServerError)
+			return
 		}
 
 		resp := response{"User registered"}
 		respond(w, r, resp, http.StatusOK)
 	}
+}
+
+func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request) {
+
+	type responseToken struct {
+		Message string `json:"token"`
+	}
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		// var data map[string]interface{}
+		var newUser user
+		err := decoder.Decode(&newUser)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		var password string
+
+		if err = s.db.QueryRow("SELECT password FROM Users WHERE email=$1", newUser.Email).Scan(&password); err != nil {
+			respond(w, r, response{"User not found"}, http.StatusOK)
+			return
+		}
+
+		if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(newUser.Password)); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		var token string
+
+		if token, err = generateToken(newUser); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		resp := responseToken{token}
+		respond(w, r, resp, http.StatusOK)
+	}
+}
+
+func generateToken(u user) (string, error) {
+	atClaim := jwt.MapClaims{}
+	atClaim["authorized"] = true
+	atClaim["user_email"] = u.Email
+	atClaim["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaim)
+	token, err := at.SignedString([]byte(os.Getenv("SECRET_KEY")))
+
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
