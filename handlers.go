@@ -42,7 +42,7 @@ func (s *server) handleHelloWord() http.HandlerFunc {
 	}
 }
 
-func (s *server) hanldeUserSignUp() func(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleUserSignUp() func(w http.ResponseWriter, r *http.Request) {
 
 	type response struct {
 		Message string `json:"message"`
