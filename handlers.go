@@ -92,8 +92,8 @@ func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request)
 		decoder := json.NewDecoder(r.Body)
 
 		// var data map[string]interface{}
-		var newUser user
-		err := decoder.Decode(&newUser)
+		var currentUser user
+		err := decoder.Decode(&currentUser)
 
 		if err != nil {
 			respondErr(w, r, err, http.StatusInternalServerError)
@@ -102,19 +102,19 @@ func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request)
 
 		var password string
 
-		if err = s.db.QueryRow("SELECT password FROM Users WHERE email=$1", newUser.Email).Scan(&password); err != nil {
+		if err = s.db.QueryRow("SELECT password FROM Users WHERE email=$1", currentUser.Email).Scan(&password); err != nil {
 			respond(w, r, response{"User not found"}, http.StatusOK)
 			return
 		}
 
-		if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(newUser.Password)); err != nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(currentUser.Password)); err != nil {
 			respond(w, r, response{"Incorrect password"}, http.StatusOK)
 			return
 		}
 
 		var token string
 
-		if token, err = generateToken(newUser); err != nil {
+		if token, err = generateToken(currentUser); err != nil {
 			respondErr(w, r, err, http.StatusInternalServerError)
 			return
 		}
