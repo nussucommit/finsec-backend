@@ -1,7 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // All handlers are methods of our server struct. So this is how they can access the database functions in db.go (since they are also methods of the server struct)
@@ -34,4 +40,100 @@ func (s *server) handleHelloWord() http.HandlerFunc {
 
 		respond(w, r, res, http.StatusOK)
 	}
+}
+
+func (s *server) handleUserSignUp() func(w http.ResponseWriter, r *http.Request) {
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		// var data map[string]interface{}
+		var newUser user
+		err := decoder.Decode(&newUser)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		passEncrypted, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
+
+		_, err = s.db.Exec("INSERT INTO Users (name, password, email) VALUES ($1, $2, $3)",
+			newUser.Name,
+			passEncrypted,
+			newUser.Email,
+		)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		resp := response{"User registered"}
+		respond(w, r, resp, http.StatusOK)
+	}
+}
+
+func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request) {
+
+	type responseToken struct {
+		Message string `json:"token"`
+	}
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		// var data map[string]interface{}
+		var currentUser user
+		err := decoder.Decode(&currentUser)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		var password string
+
+		if err = s.db.QueryRow("SELECT password FROM Users WHERE email=$1", currentUser.Email).Scan(&password); err != nil {
+			respond(w, r, response{"User not found"}, http.StatusOK)
+			return
+		}
+
+		if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(currentUser.Password)); err != nil {
+			respond(w, r, response{"Incorrect password"}, http.StatusOK)
+			return
+		}
+
+		var token string
+
+		if token, err = generateToken(currentUser); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		resp := responseToken{token}
+		respond(w, r, resp, http.StatusOK)
+	}
+}
+
+func generateToken(u user) (string, error) {
+	atClaim := jwt.MapClaims{}
+	atClaim["authorized"] = true
+	atClaim["user_email"] = u.Email
+	atClaim["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaim)
+	token, err := at.SignedString([]byte(os.Getenv("SECRET_KEY")))
+
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
