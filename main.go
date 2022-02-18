@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"net/http"
-	"os"
 )
 
 func main() {
