@@ -57,14 +57,15 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Suppliers (
-	supplier_id			INT PRIMARY KEY,
-	quotation_id		INT, -- NO NEED PRIMARY KEY FOR THIS?
+	supplier_id			INT,
+	quotation_id		INT,
 	supplier_name		TEXT,
 	contact_person		TEXT,
 	contact_number		TEXT,
 	unit_price			FLOAT,
 	total_price			FLOAT,
-	remarks				TEXT
+	remarks				TEXT,
+ 	PRIMARY KEY (supplier_id, quotation_id)
 );
 
 
@@ -76,12 +77,12 @@ CREATE TABLE Quotations (
 	student_name		TEXT,
 	obtained_date		DATE,
 	student_contact_no	TEXT,
-	suppliers			TEXT, -- NO NEED THIS?
+	suppliers			TEXT,
 	reason				TEXT,
-	selected_supplier	INT REFERENCES Suppliers(supplier_id) ON DELETE SET NULL,
+	selected_supplier	INT,
 	sum					INT,
 	process				INT REFERENCES Process(process_id) ON DELETE SET NULL,
-	--status				INT REFERENCES Quotation_status(status_id),
+	status				INT,
 	created_by			TEXT, -- NOT SURE
 	creation_time		TIMESTAMP,
 	modified_by			TEXT, -- NOT SURE
