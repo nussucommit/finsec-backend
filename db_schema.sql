@@ -33,7 +33,6 @@ CREATE TABLE Process (
 	min_amount		FLOAT,
 	max_amount		FLOAT,
 	status			INT REFERENCES Status(status_id),
-	approvers		TEXT --NOT SURE (I think we dont need this?)
 );
 
 CREATE TABLE Approvers (
