@@ -46,12 +46,10 @@ CREATE TABLE Approvers (
 CREATE TABLE Users (
 	user_id			INT PRIMARY KEY,
 	name			TEXT,
-	password		TEXT, -- can store password here?
-	salt			TEXT,
+	password		TEXT,
 	email			TEXT,
 	contact_no		TEXT,	
 	roles			INT,
-	subcomms		TEXT, -- not sure
 	account_status	TEXT,
 	FOREIGN KEY (roles) REFERENCES Roles (role_id)
 );
