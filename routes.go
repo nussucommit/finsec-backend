@@ -8,4 +8,5 @@ func (s *server) routes() {
 	s.router.HandleFunc("/", s.handleHelloWord()).Methods("GET")
 	s.router.HandleFunc("/user/signup", s.handleUserSignUp()).Methods("POST")
 	s.router.HandleFunc("/user/signin", s.handleUserSignIn()).Methods("POST")
+	s.router.HandleFunc("/quotation", s.handleQuotationGetAll()).Methods("GET")
 }

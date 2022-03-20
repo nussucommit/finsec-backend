@@ -1,6 +1,9 @@
 package main
 
 // Define your models here
+type response struct {
+	Message string `json:"message"`
+}
 type user struct {
 	User_id    int    `json:"user_id"`
 	Name       string `json:"name"`
