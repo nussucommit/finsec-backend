@@ -43,11 +43,6 @@ func (s *server) handleHelloWord() http.HandlerFunc {
 }
 
 func (s *server) handleUserSignUp() func(w http.ResponseWriter, r *http.Request) {
-
-	type response struct {
-		Message string `json:"message"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 
@@ -84,10 +79,6 @@ func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request)
 		Message string `json:"token"`
 	}
 
-	type response struct {
-		Message string `json:"message"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 
@@ -122,6 +113,90 @@ func (s *server) handleUserSignIn() func(w http.ResponseWriter, r *http.Request)
 		resp := responseToken{token}
 		respond(w, r, resp, http.StatusOK)
 	}
+}
+
+func (s *server) handleQuotationGetAll() func(w http.ResponseWriter, r *http.Request) {
+
+	type responseQuotation struct {
+		Quotations []quotation `json:"quotattions"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var quotations []quotation
+
+		sqlQuery := `SELECT quotation_id, 
+					event_name, 
+					item_description, 
+					item_quantity, 
+					student_name, 
+					status 
+					FROM Quotations`
+
+		rows, err := s.db.Query(sqlQuery)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		for rows.Next() {
+			var qtn quotation
+
+			err = rows.Scan(
+				&qtn.Quotation_id,
+				&qtn.Event_name,
+				&qtn.Item_description,
+				&qtn.Item_quantity,
+				&qtn.Student_name,
+				&qtn.Status,
+			)
+
+			if err != nil {
+				respondErr(w, r, err, http.StatusInternalServerError)
+				return
+			}
+
+			quotations = append(quotations, qtn)
+		}
+
+		responseQuotation := responseQuotation{Quotations: quotations}
+
+		respond(w, r, responseQuotation, http.StatusOK)
+
+	}
+}
+
+// Handler function to change status to approved/rejected
+// Resubmit quotation could also be done by changing the status (?)
+func (s *server) handleQuotationUpdateStatus() func(w http.ResponseWriter, r *http.Request) {
+
+	type request struct {
+		Quotation_id int `json:"quotation_id"`
+		New_status   int `json:"new_status"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		var quotationRequest request
+
+		if err := decoder.Decode(&quotationRequest); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+		}
+
+		sqlQuery := `UPDATE Quotations 
+					SET status = $1
+					WHERE quotation_id = $2`
+
+		if _, err := s.db.Exec(sqlQuery, quotationRequest.New_status, quotationRequest.Quotation_id); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		response := response{"Status has been changed"}
+		respond(w, r, response, http.StatusOK)
+	}
+
 }
 
 func generateToken(u user) (string, error) {
