@@ -124,7 +124,13 @@ func (s *server) handleQuotationGetAll() func(w http.ResponseWriter, r *http.Req
 	return func(w http.ResponseWriter, r *http.Request) {
 		var quotations []quotation
 
-		sqlQuery := " SELECT quotation_id, event_name, item_description, item_quantity, student_name, status FROM Quotations"
+		sqlQuery := `SELECT quotation_id, 
+					event_name, 
+					item_description, 
+					item_quantity, 
+					student_name, 
+					status 
+					FROM Quotations`
 
 		rows, err := s.db.Query(sqlQuery)
 
@@ -158,6 +164,39 @@ func (s *server) handleQuotationGetAll() func(w http.ResponseWriter, r *http.Req
 		respond(w, r, responseQuotation, http.StatusOK)
 
 	}
+}
+
+// Handler function to change status to approved/rejected
+// Resubmit quotation could also be done by changing the status (?)
+func (s *server) handleQuotationUpdateStatus() func(w http.ResponseWriter, r *http.Request) {
+
+	type request struct {
+		Quotation_id int `json:"quotation_id"`
+		New_status   int `json:"new_status"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		var quotationRequest request
+
+		if err := decoder.Decode(&quotationRequest); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+		}
+
+		sqlQuery := `UPDATE Quotations 
+					SET status = $1
+					WHERE quotation_id = $2`
+
+		if _, err := s.db.Exec(sqlQuery, quotationRequest.New_status, quotationRequest.Quotation_id); err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		response := response{"Status has been changed"}
+		respond(w, r, response, http.StatusOK)
+	}
+
 }
 
 func generateToken(u user) (string, error) {
