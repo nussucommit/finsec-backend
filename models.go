@@ -10,6 +10,15 @@ type user struct {
 	Role       int    `json:"role"`
 }
 
+type quotation struct {
+	Quotation_id     int    `json:"quotation_id"`
+	Event_name       string `json:"event_name"`
+	Item_description string `json:"item_description"`
+	Item_quantity    int    `json:"item_quantity"`
+	Student_name     string `json:"student_name"`
+	Status           int    `json:"status"`
+}
+
 // type role struct {
 // 	Role_id     int    `json:"role_id"`
 // 	Role_name   string `json:"role_name"`
