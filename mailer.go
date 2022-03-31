@@ -27,7 +27,7 @@ func sendEmail(recipients []string, subject string, message string) {
 	fmt.Println("Successfully sent mail to all user in toList")
 }
 
-func setResetPasswordEmail(recipients []string) {
+func setResetPasswordEmail(recipients []string, url string) {
 	subject := "Reset Password"
 
 	// use html so can add link/logo etc
@@ -50,7 +50,7 @@ func setResetPasswordEmail(recipients []string) {
 
 			To reset your password, please follow the link below:
 			<br/>
-			<a href="www.google.com">reset password link</a>
+			<a href=` + url + `>reset password link</a>
 
 			<br/><br/>
 
@@ -79,13 +79,7 @@ func confirmSignUpEmail(recipients []string) {
 
 	<body">
 		<span style="font-size: 12px; line-height: 1.5; color: #333333;">
-			We have received a request to register a new account under this email.
-			<br/><br/>
-
-			To confirm your registration, please click on the link below:
-			<br/>
-			<a href="www.google.com">Confirm Registration</a>
-
+			This email is to acknowledge that your registration under this email address is successful.
 			<br/><br/>
 
 			If you did not sign up under this email, please contact us immediately.

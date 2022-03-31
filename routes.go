@@ -8,6 +8,9 @@ func (s *server) routes() {
 	s.router.HandleFunc("/", s.handleHelloWord()).Methods("GET")
 	s.router.HandleFunc("/user/signup", s.handleUserSignUp()).Methods("POST")
 	s.router.HandleFunc("/user/signin", s.handleUserSignIn()).Methods("POST")
-	s.router.HandleFunc("/user/reset_password", s.handleResetPasswordEmail()).Methods("POST")
-	s.router.HandleFunc("/user/change_password", s.handleChangePassword()).Methods("POST")
+	s.router.HandleFunc("/user/reset_password", s.handleResetPassword()).Methods("POST")
+	s.router.HandleFunc("/user/reset_password_email", s.handleResetPasswordEmail()).Methods("POST")
+	s.router.HandleFunc("/user/change_password/:userId", s.handleChangePassword()).Methods("POST")
+	s.router.HandleFunc("/user/signup_confirmation_email/:userId", s.handleSignupConfirmationEmail()).Methods("POST")
+	s.router.HandleFunc("/user/verified_account_status/:userId", s.handleVerifiedAccountStatus()).Methods("POST")
 }

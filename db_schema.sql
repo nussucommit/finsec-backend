@@ -1,6 +1,7 @@
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE Roles (
 	role_id		INT PRIMARY KEY,
 	role_name	TEXT,
@@ -43,14 +44,15 @@ CREATE TABLE Approvers (
 );
 
 CREATE TABLE Users (
-	user_id			INT PRIMARY KEY,
+	user_id			uuid DEFAULT uuid_generate_v4(),
 	name			TEXT,
 	password		TEXT,
 	email			TEXT,
 	contact_no		TEXT,	
 	roles			INT,
 	account_status	TEXT,
-	FOREIGN KEY (roles) REFERENCES Roles (role_id)
+	FOREIGN KEY (roles) REFERENCES Roles (role_id),
+	PRIMARY KEY (user_id)
 );
 
 CREATE TABLE Suppliers (
