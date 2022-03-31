@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -136,4 +137,77 @@ func generateToken(u user) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func (s *server) handleResetPasswordEmail() func(w http.ResponseWriter, r *http.Request) {
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		// var data map[string]interface{}
+		var usernameOrEmail string
+
+		err := decoder.Decode(&usernameOrEmail)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		var email string
+		row := s.db.QueryRow("SELECT email FROM Users WHERE name = $1", usernameOrEmail)
+
+		if err := row.Scan(&email); err != nil {
+			if err == sql.ErrNoRows {
+				row = s.db.QueryRow("SELECT email FROM Users WHERE email = $1", usernameOrEmail)
+				if err = row.Scan(&email); err != nil {
+					respondErr(w, r, err, http.StatusInternalServerError)
+					return
+				}
+			}
+		}
+
+		setResetPasswordEmail([]string{email})
+
+		resp := response{"Reset Email Sent successfully"}
+		respond(w, r, resp, http.StatusOK)
+	}
+}
+
+func (s *server) handleChangePassword() func(w http.ResponseWriter, r *http.Request) {
+
+	type response struct {
+		Message string `json:"message"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		// var data map[string]interface{}
+		var newPassword string
+		err := decoder.Decode(&newPassword)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		passEncrypted, _ := bcrypt.GenerateFromPassword([]byte(newPassword), 14)
+
+		_, err = s.db.Exec("INSERT INTO Users password VALUES $1",
+			passEncrypted,
+		)
+
+		if err != nil {
+			respondErr(w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		resp := response{"Password Changed"}
+		respond(w, r, resp, http.StatusOK)
+	}
 }
